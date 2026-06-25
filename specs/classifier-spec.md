@@ -226,24 +226,28 @@ any labels you're unsure about. Annotation quality is part of the lab.
 **Test: what does the raw LLM response look like for one episode?**
 
 ```
-Episode tested: [title]
-Raw response text: [paste it here]
+Episode tested: First-Gen, Then What? A Conversation with Career Coach Sonia Park
+Raw response text: 
+
+Label: interview
+Reasoning: The episode features a conversation between the host and Sonia Park, discussing her experiences and expertise in coaching first-generation graduates, which fits the format of an interview. The description mentions "we talk" and quotes Sonia's areas of expertise, indicating a back-and-forth conversation between the host and a guest.
 ```
 
 **How did you parse the label out of the response?**
 
 ```
 [describe the string operations — strip, split, lower, etc.]
+I parsed the label by stripping, lowering, and checking the cases line by line. By first stripping and lowering, I was able to then check if it started with "label" or "reasoning", and then proceed from there.
 ```
 
 **Did any episodes return `"unknown"`? If so, why?**
 
 ```
-[yes / no — if yes, what did the raw response look like?]
+No, I was unable to find a test case (even making one up myself) that tested to unknown; it  seemed to always default towards solo.
 ```
 
 **One thing about the output format that surprised you:**
 
 ```
-[your answer here]
+The formatting matched exactly how I wanted it to match, which was surprising since LLM's usually mess the formatting up if not specified.
 ```
