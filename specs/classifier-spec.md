@@ -96,14 +96,24 @@ makes parsing reliable? Think about: a single label on its own line?
 A structured format like "Label: X / Reasoning: Y"? JSON?
 What are the tradeoffs?]
 ```
+We will use the "Label: X / Reasoning: Y" model. Given that we already use "Label: {label}" for our example, staying consistent and using this option will help long-term in debugging and simplicity.
+
+Tradeoffs for this includes model drifting due to no normalization.
+To solve this tradeoff, we will need to normalize the strings (lowercase, strip punctuation/markdown), and checking "VALID_LABELS".
 
 ---
 
 **Edge cases to handle in the prompt:**
 
 ```
-[blank — what if labeled_examples is empty? What if the description is very
-short? How does your prompt handle these?]
+Empty labeled_examples: build the prompt anyway as a zero-shot prompt — the task instruction and label definitions are enough for the model to classify.
+Skip the examples section entirely (don't emit a dangling "Examples:" header
+with nothing under it). With no examples to anchor the output shape, the model is more likely to drift in formatting, so the parser must search for the "Label:" token rather than assume it's on a fixed line.
+
+Very short description: don't add a special branch — a short description is a quality problem, not a parsing problem. Instruct the model to pick its best guess from the four labels rather than refuse, so it doesn't return "I can't classify this" and force an "unknown". The reasoning field captures the uncertainty (e.g. "little detail, but tone suggests solo") for later review.
+
+Output-side fallbacks (handled in parsing/validation, not the prompt): no
+"Label:" line → "unknown"; label not in VALID_LABELS → "unknown"; missing reasoning → "". These keep one bad response from crashing the 20-call loop.
 ```
 
 ---
@@ -164,6 +174,9 @@ What string operations or parsing logic do you need?
 This depends on the output format you chose in build_few_shot_prompt.]
 ```
 
+Since we are using the "Label: X / Reasoning: Y" model, the extraction will first grab the label by checking for the colon, and do the same for reasoning.
+
+To reiterate, we will use string parsing, searching for "Label:", and "Reasoning:". Because build_few_shot_prompt will output this format, we know to search for "Label:", and then "Reasoning:", which makes parsing much easier. Once we are able to find label + reasoning, we will conduct normalization (remove whitespace strip markdown) to make sure that what we have is consistent with the test data
 ---
 
 **Step 4 — Validate the label:**
@@ -172,7 +185,7 @@ This depends on the output format you chose in build_few_shot_prompt.]
 [blank — what do you do if the LLM returns a label that isn't in VALID_LABELS?
 What should label be set to?]
 ```
-
+If the LLM returns a label that isnt in VALID_LABELS, it should be labeled as "unknown", and counts as incorrect during evaluation, but still get returned.
 ---
 
 **Step 5 — Handle errors gracefully:**
@@ -182,7 +195,7 @@ What should label be set to?]
 What should the function return if something fails?
 Hint: the evaluation loop runs 20 calls — one bad response shouldn't crash everything.]
 ```
-
+If something fails, we should continue with our data set, but label the bad data. In this case, if something goes wrong, label and reasoning are marked as wrong and labeled "unknown" and "error message" respectively.
 ---
 
 ### Return value structure
