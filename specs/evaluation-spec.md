@@ -47,6 +47,7 @@ Returns the fraction of predictions that exactly match the ground truth.
 [blank — write out the accuracy formula in plain English.
  What counts as "correct"? What do you divide by?]
 ```
+The accuracy formula for the classification of all the episodes should just be the correct predictions (predictions that match ground_truth) divided by total number of episodes. For example, if we have 10 right predictions by the classifier out of 20 episodes, the accuracy formula should be 10/20, which is 50%.
 
 ---
 
@@ -58,6 +59,9 @@ Returns the fraction of predictions that exactly match the ground truth.
  2. ...
  3. ...]
 ```
+1. Normalize the labels in 'predictions' and 'ground_truth'. That way, when we compare the labels in 'prediction' and 'ground_truth', we are able to see comparisons side-by-side without worrying about whitespaces, uppercases, etc.
+2. Compute the matches in 'predictions' and 'ground_truth'. For each label in 'predictions' that matches the label in 'ground_truth', we have 1 correct prediction.
+3. Once we have the correct prediction count, we divide this number by the total number of labels. In this case, it would be the length of 'predictions' or 'ground_truth'.
 
 ---
 
@@ -66,6 +70,7 @@ Returns the fraction of predictions that exactly match the ground truth.
 ```
 [blank — what should the function return? Why?]
 ```
+If both inputs are empty, then we simply return accuracy as 0. Because we have no list to work with, we cannot compute the accuracy, and therefore should return either a 0 or null.
 
 ---
 
@@ -77,7 +82,13 @@ ground_truth = ["interview", "solo", "solo",  "narrative"]
 
 [blank — what does compute_accuracy() return for these inputs? Show your work.]
 ```
+Because 'predictions' and 'ground_truth' are in the same order, we just count the labels that are the same in both orders. In this example,
+1. interview, interview (+1)
+2. solo, solo (+1)
+3. panel, solo
+4. interview, narrative
 
+overall, because we have 1 and 2 with the same label in the same order, we have 2 correct labels. We then divide this by the total number of labels, which in this case is 4 (prediction + ground_truth length = 4). Therefore, we have 2/4, which is 50%.
 ---
 
 ## compute_per_class_accuracy(predictions, ground_truth)
@@ -116,6 +127,8 @@ A `dict` keyed by label. Each value is a dict with three keys:
 [blank — be precise. When does an episode count as correctly classified
  for the "interview" class, for example?]
 ```
+For an episode to be classified as correctly labeled, we calculate the number of 'labels' that we have, and see how many times it was correctly labeled.
+For example, if we have 20 episodes, and 5 of them are labeled 'interview', we want to see how many of the 5 'interview' were correctly labeled. If 3 of the 'interview' were actually labeled 'interview', then we would have 3/5, which would be 60%.
 
 ---
 
@@ -124,7 +137,7 @@ A `dict` keyed by label. Each value is a dict with three keys:
 ```
 [blank — is "total" the total number of predictions, or something more specific?]
 ```
-
+Total is the total number of 'label' in the list. If we have 20 episodes, and 4 of them are labeled 'solo', then our total for the given class 'solo' would be 4. 
 ---
 
 **Step-by-step logic:**
@@ -138,6 +151,11 @@ A `dict` keyed by label. Each value is a dict with three keys:
  5. Return ...]
 ```
 
+1. Initialize a dictionary with 4 keys (for the 4 labels), each containing a dictionary with keys 'correct', 'total' and 'accuracy' of type int, int and float respectively. 'correct' and 'total' should be initialized to 0.
+2. Loop over each value in 'ground_truth'. For each value in 'ground_truth', we increment the 'total' in that 'label' by 1, and compare it to the value in 'predictions'. If the prediction is right, we increment 'correct' by 1.
+3. After we finish the loop, we create another loop, this time to calculate the 'accuracy' in the 'labels' dictionary. For each label that we have, we calculate 'correct'/'total', and store that as a float in 'accuracy'.
+4. We return the dictionary.
+
 ---
 
 **Edge case — what if a class has no examples in ground_truth (total == 0)?**
@@ -147,6 +165,7 @@ A `dict` keyed by label. Each value is a dict with three keys:
  Hint: look at the docstring in evaluate.py.]
 ```
 
+If a class has no example in ground_truth, the 'accuracy' should be set to 0.0.
 ---
 
 **Worked example:**
@@ -159,10 +178,10 @@ ground_truth = ["interview", "solo",      "solo", "panel", "narrative"]
 
 label       correct  total  accuracy
 ----------  -------  -----  --------
-interview   [blank]  [blank]  [blank]
-solo        [blank]  [blank]  [blank]
-panel       [blank]  [blank]  [blank]
-narrative   [blank]  [blank]  [blank]
+interview   [1]      [1]      [1.0]
+solo        [1]      [2]      [0.5]
+panel       [1]      [1]      [1.0]
+narrative   [0]      [1]      [0.0]
 ```
 
 ---
