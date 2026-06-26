@@ -58,7 +58,18 @@ def compute_accuracy(predictions: list[str], ground_truth: list[str]) -> float:
 
     Before writing code, complete specs/evaluation-spec.md.
     """
-    return 0.0
+    total = len(ground_truth)
+    if total == 0:
+        return 0.0
+
+    correct = 0
+    for i in range(total):
+        predicted = predictions[i].strip().lower()
+        truth = ground_truth[i].strip().lower()
+        if predicted == truth:
+            correct += 1
+
+    return correct / total
 
 
 def compute_per_class_accuracy(
@@ -83,7 +94,28 @@ def compute_per_class_accuracy(
 
     Before writing code, complete specs/evaluation-spec.md.
     """
-    return {label: {"correct": 0, "total": 0, "accuracy": 0.0} for label in VALID_LABELS}
+    # 1. Initialize per-class counters.
+    per_class = {
+        label: {"correct": 0, "total": 0, "accuracy": 0.0} for label in VALID_LABELS
+    }
+
+    # 2. Tally totals and correct predictions per ground-truth class.
+    for i in range(len(ground_truth)):
+        predicted = predictions[i].strip().lower()
+        truth = ground_truth[i].strip().lower()
+        if truth not in per_class:
+            continue
+        per_class[truth]["total"] += 1
+        if predicted == truth:
+            per_class[truth]["correct"] += 1
+
+    # 3. Compute accuracy per class (0.0 when the class has no examples).
+    for stats in per_class.values():
+        if stats["total"] > 0:
+            stats["accuracy"] = stats["correct"] / stats["total"]
+
+    # 4. Return the per-class results.
+    return per_class
 
 
 def format_evaluation_report(eval_results: dict) -> str:
